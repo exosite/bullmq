@@ -20,22 +20,23 @@ const processSendAsync = promisify(process.send.bind(process)) as (
   msg: any,
 ) => Promise<void>;
 
-// https://stackoverflow.com/questions/18391212/is-it-not-possible-to-stringify-an-error-using-json-stringify
+const toJSON = {
+  value() {
+    const newValue: any = {};
+    const _this: any = this;
+
+    Object.getOwnPropertyNames(_this).forEach(key => {
+      newValue[key] = _this[key];
+    });
+
+    return newValue;
+  },
+  configurable: true,
+  writable: true,
+};
+
 if (!('toJSON' in Error.prototype)) {
-  Object.defineProperty(Error.prototype, 'toJSON', {
-    value: function() {
-      const alt: any = {};
-      const _this = this;
-
-      Object.getOwnPropertyNames(_this).forEach(function(key) {
-        alt[key] = _this[key];
-      }, this);
-
-      return alt;
-    },
-    configurable: true,
-    writable: true,
-  });
+  Object.defineProperty(Error.prototype, 'toJSON', toJSON);
 }
 
 async function waitForCurrentJobAndExit() {
